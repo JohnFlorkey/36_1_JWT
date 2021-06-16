@@ -2,6 +2,7 @@
 const bcrypt = require('bcrypt');
 const { BCRYPT_WORK_FACTOR } = require('../config');
 const db = require('../db');
+const ExpressError = require('../expressError');
 /** User of the site. */
 
 class User {
@@ -37,16 +38,20 @@ class User {
   /** Authenticate: is this username/password valid? Returns boolean. */
 
   static async authenticate(username, password) {
-    const result = await db.query(
-      `SELECT password
-      FROM users
-      WHERE username = $1`,
-      [username]
-    );
-
-    const hashedPassword = result.rows[0]["password"];
-
-    return await bcrypt.compare(password, hashedPassword);
+    try {
+      const result = await db.query(
+        `SELECT password
+        FROM users
+        WHERE username = $1`,
+        [username]
+      );
+  
+      const hashedPassword = result.rows[0]["password"];
+  
+      return await bcrypt.compare(password, hashedPassword);
+    } catch {
+      return false
+    }
   }
 
   /** Update last_login_at for user */
